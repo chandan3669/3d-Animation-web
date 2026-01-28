@@ -1,0 +1,279 @@
+/* RESET & CORE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #050505;
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --accent: #333333;
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    /* Prevent bounce styling on Mac */
+}
+
+/* LOADING SCREEN */
+.loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease-out;
+}
+
+.loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader-content {
+    text-align: center;
+    width: 300px;
+}
+
+.loader-text {
+    font-family: var(--font-heading);
+    letter-spacing: 2px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: block;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 2px;
+    background: #111;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #fff;
+    transition: width 0.1s linear;
+}
+
+/* SCROLL STRUCTURE */
+.scroll-container {
+    height: 400vh;
+    /* Determines the scroll length */
+    position: relative;
+}
+
+.sticky-wrapper {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* CINEMATIC LIGHTING */
+.ambient-light {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150vw;
+    height: 150vh;
+    background: radial-gradient(circle, rgba(60, 70, 90, 0.1) 0%, rgba(5, 5, 5, 0) 60%);
+    opacity: 0.5;
+    transition: opacity 0.1s linear;
+    /* JS driven */
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: screen;
+}
+
+.vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.8) 120%);
+    pointer-events: none;
+    z-index: 2;
+    /* Above canvas */
+}
+
+/* Add a subtle noise texture to the whole body for filmic look */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.35;
+    mix-blend-mode: overlay;
+}
+
+/* CANVAS */
+canvas {
+    display: block;
+    position: relative;
+    z-index: 1;
+    /* Above light, below vignette */
+    /* Canvas size is handled by JS logic for responsiveness, 
+       but we ensure it maxes out correctly */
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+/* OVERLAYS */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    /* Above everything */
+}
+
+.text-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Improved easing */
+}
+
+.text-overlay.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.text-overlay h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 7vw, 7rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    /* Optical glow */
+}
+
+.text-overlay h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+    color: #f0f0f0;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.text-overlay p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 400px;
+    line-height: 1.6;
+}
+
+.text-overlay.center {
+    align-items: center;
+    text-align: center;
+}
+
+.text-overlay.left {
+    align-items: flex-start;
+    padding-left: 10vw;
+}
+
+.text-overlay.right {
+    align-items: flex-end;
+    padding-right: 10vw;
+    text-align: right;
+}
+
+.cta-btn {
+    margin-top: 3rem;
+    padding: 1.2rem 3.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    /* Extremely subtle glass */
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    pointer-events: auto;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: #fff;
+    transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    z-index: -1;
+}
+
+.cta-btn:hover {
+    color: #000;
+    border-color: #fff;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+    /* Premium Glow */
+}
+
+.cta-btn:hover::before {
+    width: 100%;
+}
+
+.spacer-footer {
+    height: 20vh;
+    background: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}

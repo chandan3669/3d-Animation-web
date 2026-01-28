@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Killer00X | Future of Surveillance</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;400;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <main>
+        <!-- Loading Screen -->
+        <div id="loader" class="loader">
+            <div class="loader-content">
+                <span class="loader-text">INITIALIZING SYSTEMS</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Container (Defines the 400vh scroll height) -->
+        <div class="scroll-container">
+
+            <!-- Sticky Wrapper (Holds the canvas viewport) -->
+            <div class="sticky-wrapper">
+                <!-- Cinematic Lighting Layers -->
+                <div class="ambient-light" id="ambient-light"></div>
+                <div class="vignette"></div>
+
+                <canvas id="drone-canvas"></canvas>
+
+                <!-- Overlay Container for Text -->
+                <div class="overlay-container">
+
+                    <!-- Section 1: Intro -->
+                    <section class="text-overlay center" id="overlay-1">
+                        <h1>Killer 00X </h1>
+                        <p class="subtitle">SILENT. PRECISE. INVISIBLE.</p>
+                    </section>
+
+                    <!-- Section 2: Expansion -->
+                    <section class="text-overlay left" id="overlay-2">
+                        <h2>AERODYNAMIC INTELLIGENCE</h2>
+                        <p>Adaptive geometry for zero-drag flight.</p>
+                    </section>
+
+                    <!-- Section 3: Exploded -->
+                    <section class="text-overlay right" id="overlay-3">
+                        <h2>ENGINEERED SURVEILLANCE</h2>
+                        <p>Modular sensor array with 360° redundancy.</p>
+                    </section>
+
+                    <!-- Section 4: CTa -->
+                    <section class="text-overlay center" id="overlay-4">
+                        <h2>REDEFINING AERIAL CONTROL</h2>
+                        <button class="cta-btn">PRE-ORDER CONCEPT</button>
+                    </section>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="spacer-footer">
+            <p>DESIGNED BY CHANDAN</p>
+        </div>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
