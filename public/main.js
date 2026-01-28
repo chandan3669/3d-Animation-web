@@ -85,17 +85,29 @@ function render(progress) {
     // Clear once
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw first frame (base)
-    if (img1 && img1.complete && img1.naturalWidth !== 0) {
-        ctx.globalAlpha = 1;
-        drawFrame(img1);
-    }
+    // OPTIMIZATION: If blend is very close to 0 or 1, don't double-render
+    if (blend < 0.01) {
+        if (img1 && img1.complete && img1.naturalWidth !== 0) {
+            ctx.globalAlpha = 1;
+            drawFrame(img1);
+        }
+    } else if (blend > 0.99) {
+        if (img2 && img2.complete && img2.naturalWidth !== 0) {
+            ctx.globalAlpha = 1;
+            drawFrame(img2);
+        }
+    } else {
+        // Draw first frame (base)
+        if (img1 && img1.complete && img1.naturalWidth !== 0) {
+            ctx.globalAlpha = 1;
+            drawFrame(img1);
+        }
 
-    // Draw second frame (overlay with opacity)
-    // Only if it's a different frame and valid
-    if (index1 !== index2 && img2 && img2.complete && img2.naturalWidth !== 0) {
-        ctx.globalAlpha = blend;
-        drawFrame(img2);
+        // Draw second frame (overlay with opacity)
+        if (index1 !== index2 && img2 && img2.complete && img2.naturalWidth !== 0) {
+            ctx.globalAlpha = blend;
+            drawFrame(img2);
+        }
     }
 
     // Reset Alpha
@@ -119,13 +131,8 @@ function drawFrame(img) {
 // Animation Loop
 function loop() {
     // Linear Interpolation (Lerp) for smooth momentum
-    // 0.05 = heavier smooth (slow), 0.1 = snappy
-    smoothedProgress += (targetProgress - smoothedProgress) * 0.08;
-
-    // Optimize: Stop rendering if close enough
-    // if (Math.abs(targetProgress - smoothedProgress) < 0.0001) ...
-    // But we need to keep rendering for lighting/text updates if they depend on exact progress? 
-    // Actually continuously rendering is fine for this simplicity.
+    // INCREASED SPEED: 0.15 (was 0.08) for snappier response
+    smoothedProgress += (targetProgress - smoothedProgress) * 0.15;
 
     render(smoothedProgress);
     updateTextOverlays(smoothedProgress);
