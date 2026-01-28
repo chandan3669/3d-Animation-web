@@ -63,30 +63,46 @@ const preloadImages = () => {
 
 function initAnimation() {
     loader.classList.add('hidden');
-    render();
+    loop(); // Start the animation loop
 }
 
-// Draw the current frame to the canvas
-// preserving aspect ratio (contain)
-function render() {
-    const img = images[currentFrame.index];
+// Smooth Scroll State
+let targetProgress = 0;
+let smoothedProgress = 0;
 
-    // If image isn't loaded or invalid, verify if we can fallback to first frame 
-    // or just return to avoid error
-    if (!img || !img.complete || img.naturalWidth === 0) {
-        // Try drawing first frame if current is missing?
-        if (images[0] && images[0].complete) {
-            drawFrame(images[0]);
-        }
-        return;
+// Draw the current frame to the canvas
+// blending between two frames for smoothness
+function render(progress) {
+    // Map progress (0..1) to frame index (0..39)
+    const floatIndex = progress * (frameCount - 1);
+    const index1 = Math.floor(floatIndex);
+    const index2 = Math.min(frameCount - 1, Math.ceil(floatIndex));
+    const blend = floatIndex - index1; // Decimal part for opacity
+
+    const img1 = images[index1];
+    const img2 = images[index2];
+
+    // Clear once
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw first frame (base)
+    if (img1 && img1.complete && img1.naturalWidth !== 0) {
+        ctx.globalAlpha = 1;
+        drawFrame(img1);
     }
 
-    drawFrame(img);
+    // Draw second frame (overlay with opacity)
+    // Only if it's a different frame and valid
+    if (index1 !== index2 && img2 && img2.complete && img2.naturalWidth !== 0) {
+        ctx.globalAlpha = blend;
+        drawFrame(img2);
+    }
+
+    // Reset Alpha
+    ctx.globalAlpha = 1;
 }
 
 function drawFrame(img) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     const hRatio = canvas.width / img.width;
     const vRatio = canvas.height / img.height;
     const ratio = Math.min(hRatio, vRatio); // Contain fit
@@ -100,37 +116,34 @@ function drawFrame(img) {
     );
 }
 
+// Animation Loop
+function loop() {
+    // Linear Interpolation (Lerp) for smooth momentum
+    // 0.05 = heavier smooth (slow), 0.1 = snappy
+    smoothedProgress += (targetProgress - smoothedProgress) * 0.08;
+
+    // Optimize: Stop rendering if close enough
+    // if (Math.abs(targetProgress - smoothedProgress) < 0.0001) ...
+    // But we need to keep rendering for lighting/text updates if they depend on exact progress? 
+    // Actually continuously rendering is fine for this simplicity.
+
+    render(smoothedProgress);
+    updateTextOverlays(smoothedProgress);
+    updateLighting(smoothedProgress);
+
+    requestAnimationFrame(loop);
+}
+
 // Scroll Handling
 window.addEventListener('scroll', () => {
     const html = document.documentElement;
     const scrollContainer = document.querySelector('.scroll-container');
-
-    // Calculate how far down the scroll container we are
-    // The container is 400vh. The window is 100vh.
-    // Max scrollable distance is (400vh - 100vh).
     const maxScrollTop = scrollContainer.scrollHeight - window.innerHeight;
     const scrollTop = html.scrollTop;
-
     const scrollFraction = scrollTop / maxScrollTop;
 
-    // Clamp 0 to 1
-    const progress = Math.min(1, Math.max(0, scrollFraction));
-
-    // Update Frame Index
-    // Map 0..1 to 0..39
-    const frameIndex = Math.min(
-        frameCount - 1,
-        Math.floor(progress * frameCount)
-    );
-
-    if (frameIndex !== currentFrame.index) {
-        currentFrame.index = frameIndex;
-        requestAnimationFrame(render);
-    }
-
-    // Update Text Overlays
-    updateTextOverlays(progress);
-    updateLighting(progress);
+    // Update Target only
+    targetProgress = Math.min(1, Math.max(0, scrollFraction));
 });
 
 function updateLighting(progress) {
@@ -143,7 +156,6 @@ function updateLighting(progress) {
     // 0.8 - 1.0: Dim (Reassembly)
 
     let opacity = 0.4;
-    let scale = 1;
 
     if (progress < 0.2) {
         opacity = 0.3 + (progress * 0.5); // 0.3 -> 0.4
@@ -155,9 +167,6 @@ function updateLighting(progress) {
         opacity = 0.7 - ((progress - 0.8) * 1.5); // 0.7 -> 0.4
     }
 
-    // Slight blue tint vs pure white shift could be cool
-    // We'll stick to opacity for strictly "lighting intensity"
-
     light.style.opacity = opacity;
     light.style.transform = `translate(-50%, -50%) scale(${1 + progress * 0.2})`;
 }
@@ -165,7 +174,6 @@ function updateLighting(progress) {
 function updateTextOverlays(progress) {
     const p = progress * 100; // 0 to 100
 
-    // Helper to toggle active class
     const toggle = (id, active) => {
         const el = document.getElementById(id);
         if (el) {
